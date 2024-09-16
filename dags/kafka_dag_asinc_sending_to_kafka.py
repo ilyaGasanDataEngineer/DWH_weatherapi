@@ -10,17 +10,6 @@ from confluent_kafka import Producer, KafkaError
 cities = ['Moscow', 'London', 'Paris', 'Berlin', 'Tokyo']
 
 
-def connect_to_db():
-    connection = psycopg2.connect(
-        dbname="threadings",  # убедитесь, что это название вашей базы данных
-        user="ilyagasan",  # ваше имя пользователя PostgreSQL
-        password="29892989",  # ваш пароль для PostgreSQL
-        host="localhost",  # сервер базы данных
-        port="5432"  # порт PostgreSQL (по умолчанию 5432)
-    )
-    return connection
-
-
 def fetch_weather_data():
     for city in cities:
         try:
@@ -50,23 +39,27 @@ def send_to_kafka():
         print(f"Error creating Kafka producer: {e}")
         return
 
-    for data in fetch_weather_data():
-        try:
-            print(f"Preparing to send data: {data}")
-            producer.produce(
-                'asinc_sending',
-                key=str(data['city']).encode('utf-8'),
-                value=json.dumps(data).encode('utf-8')  # Преобразуем данные в JSON
-            )
-            print(f"Sent data for {data['city']}: {data}")
-        except Exception as e:
-            print(f"Failed to send data for {data['city']}: {e}")
-        finally:
-            producer.flush()  # Дожидаемся отправки сообщений
+
+    data_to_send = None
+
+    data_to_send = [data for data in fetch_weather_data()]
+
+    try:
+        print(f"Preparing to send data: {data_to_send}")
+        producer.produce(
+            'asinc_sending',
+            key=str(datetime.now()),
+            value=json.dumps(data_to_send).encode('utf-8')  # Преобразуем данные в JSON
+        )
+        print(data_to_send)
+    except Exception as e:
+        print(f"Failed to send data for : {e}")
+    finally:
+        producer.flush()  # Дожидаемся отправки сообщений
 
 def test():
     print('okay')
-
+    zz
 # Аргументы DAG
 args = {
     'owner': 'ilyagasan',
